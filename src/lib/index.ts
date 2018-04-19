@@ -3,7 +3,11 @@ export interface ExplainResult {
   reason: string;
 }
 
-export type MongoPrimative = number | string | null | Date;
+export interface Stringable {
+  toString(): string;
+}
+
+export type MongoPrimative = number | string | null | Date | Stringable;
 
 export interface MongoQuery {
   $and?: MongoQuery[];
@@ -30,60 +34,11 @@ export function explain(doc: any, query: MongoQuery, path = ''): ExplainResult {
 
   for (const key of keys) {
     if (isOperatorKey(key)) {
-      switch (key) {
-        case '$and': {
-          //
-        }
-
-        case '$or': {
-          //
-        }
-
-        case '$in': {
-          //
-        }
-
-        case '$nin': {
-          //
-        }
-
-        default: {
-          console.warn(`No logic implemented for query operator: ${key}`);
-          continue;
-        }
-      }
+      const result = handleOperatorKey(key, doc, query, path);
     }
 
     if (isNestedPropertyKey(key)) {
-      const nestedDoc = get(doc, key);
-      const nestedQuery = query[key];
-
-      if (typeof nestedQuery === 'undefined') {
-        throw new Error(`Value at query path ${path}.${key} is undefined.`);
-      }
-
-      if (isMongoPrimative(nestedQuery)) {
-        const matches = matchesPrimative(nestedDoc, nestedQuery);
-        if (!matches) {
-          return {
-            matches: false,
-            reason: `Document does not match query property ${path}.${key}`
-          };
-        }
-      } else if (Array.isArray(nestedQuery)) {
-        // TODO deal with TS
-        throw new Error(`Invalid nested query.`);
-      } else {
-        const nested = explain(nestedDoc, nestedQuery, `${path}.${key}`);
-
-        // don't match a sub query, short circuit...
-        if (!nested.matches) {
-          return nested;
-        }
-
-        // add the match to the list of reasons
-        reasons.push(nested.reason);
-      }
+      const result = handleNestedKey(key, doc, query, path);
     }
 
     // key is directly in doc, can check the property...
@@ -100,12 +55,102 @@ export function explain(doc: any, query: MongoQuery, path = ''): ExplainResult {
   return { matches: true, reason: reasons.join(',') };
 }
 
+/**
+ * check if a nested property query field matches the document
+ *
+ * @param key
+ * @param doc
+ * @param query
+ * @param path
+ */
+function handleNestedKey(
+  key: string,
+  doc: any,
+  query: MongoQuery,
+  path = ''
+): ExplainResult {
+  const nestedDoc = get(doc, key);
+  const nestedQuery = query[key];
+
+  if (typeof nestedQuery === 'undefined') {
+    throw new Error(`value at query path ${path}.${key} is undefined.`);
+  }
+
+  if (isMongoPrimative(nestedQuery)) {
+    const matches = matchesPrimative(nestedDoc, nestedQuery);
+    return {
+      matches,
+      reason: `${matches ? '' : 'does not '}match${
+        matches ? 'es' : ''
+      } query property ${path}.${key}`
+    };
+  } else if (Array.isArray(nestedQuery)) {
+    // TODO deal with TS
+    throw new Error(`Invalid nested query.`);
+  } else {
+    return explain(nestedDoc, nestedQuery, `${path}.${key}`);
+  }
+}
+
+/**
+ * check if an operator field matches the document
+ *
+ * @param key
+ * @param doc
+ * @param query
+ * @param path
+ */
+function handleOperatorKey(
+  key: string,
+  doc: any,
+  query: MongoQuery,
+  path = ''
+): ExplainResult {
+  switch (key) {
+    case '$and': {
+      //
+    }
+
+    case '$or': {
+      //
+    }
+
+    case '$in': {
+      //
+    }
+
+    case '$nin': {
+      //
+    }
+
+    default: {
+      console.warn(`No logic implemented for query operator: ${key}`);
+      return {
+        matches: false,
+        reason: `Query contains unrecognized operator ${key} at path ${path}`
+      };
+    }
+  }
+}
+
 function matchesPrimative(val: MongoPrimative, query: MongoPrimative) {
   if (val instanceof Date) {
     return query instanceof Date && query.getTime() === val.getTime();
   }
 
+  if (isStringable(val)) {
+    return isStringable(query) && val.toString() === query.toString();
+  }
+
   return val === query;
+}
+
+function isStringable<T>(obj: T | Stringable): obj is Stringable {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    typeof (obj as any).toString === 'function'
+  );
 }
 
 function isMongoPrimative<T>(obj: T | MongoPrimative): obj is MongoPrimative {
