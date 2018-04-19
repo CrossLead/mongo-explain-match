@@ -7,5 +7,5 @@
 export function explain(doc: object, query: {}) {
   const reasons: string[] = [];
 
-  return reasons;
+  return { matches: true, reasons: reasons.join(' ') };
 }

@@ -13,9 +13,11 @@ const doc = {
   id: 1
 };
 
-const reason = explain(doc, { id: { $in: [1, 2, 3] } });
+const result = explain(doc, { id: { $in: [1, 2, 3] } });
 
-console.log(reason);
+console.log(result.matches);
+// -> true
+console.log(result.reason);
 // -> "document.id property matches 'id.$in' clause on query"
 ```
 
