@@ -2,8 +2,10 @@
   "name": "mongo-query-explain",
   "version": "0.0.0",
   "scripts": {
-    "test": "ava",
-    "build": "tsc"
+    "test": "npm run build && npm run lint && npm run ava",
+    "ava": "ava",
+    "build": "tsc",
+    "lint": "tslint --project ./ --fix './src/**/*.ts'"
   },
   "ava": {
     "files": ["dist/test/index.js"]

@@ -4,7 +4,7 @@
  * @param doc mongodb document as plain object
  * @param query mongodb query object
  */
-export function explain(doc: Object, query: {}) {
+export function explain(doc: object, query: {}) {
   const reasons: string[] = [];
 
   return reasons;
