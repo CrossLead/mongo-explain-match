@@ -1,14 +1,15 @@
 {
   "name": "mongo-query-explain",
   "version": "0.0.0",
+  "main": "./dist/index.js",
+  "module": "./dist-es/index.js",
+  "jsnext:main": "./dist-es/index.js",
   "scripts": {
     "test": "npm run build && npm run lint && npm run ava",
     "ava": "ava",
     "build": "tsc",
+    "build-module": "tsc -p ./ --module 'ES2015' --outDir './dist-es/'",
     "lint": "tslint --project ./ --fix './src/**/*.ts'"
-  },
-  "engines": {
-    "node": ">=6.9.1"
   },
   "ava": {
     "files": ["dist/test/index.js"]
