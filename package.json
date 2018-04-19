@@ -7,6 +7,9 @@
     "build": "tsc",
     "lint": "tslint --project ./ --fix './src/**/*.ts'"
   },
+  "engines": {
+    "node": ">=6.9.1"
+  },
   "ava": {
     "files": ["dist/test/index.js"]
   },
