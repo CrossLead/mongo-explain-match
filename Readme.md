@@ -1,5 +1,7 @@
 # mongo-query-explain
 
+[![Build Status](https://travis-ci.org/CrossLead/mongo-query-explain.svg?branch=master)](https://travis-ci.org/CrossLead/mongo-query-explain)
+
 Utility library for explaining why a document matches a query.
 
 ## Example
