@@ -30,6 +30,14 @@ export interface MongoQuery {
  */
 export function explain(doc: any, query: MongoQuery, path = ''): ExplainResult {
   const keys = Object.keys(query);
+
+  if (!keys.length) {
+    return {
+      matches: true,
+      reason: `has no keys`
+    };
+  }
+
   const reasons: string[] = [];
 
   for (const key of keys) {
