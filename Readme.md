@@ -13,12 +13,12 @@ const doc = {
   id: 1
 };
 
-const result = explain(doc, { id: { $in: [1, 2, 3] } });
+const result = explain(doc, { id: { $in: [2, 3] } });
 
 console.log(result.matches);
-// -> true
+// -> false
 console.log(result.reason);
-// -> "document.id property matches 'id.$in' clause on query"
+// -> "document.id does not match the 'id.$in' clause on the given query"
 ```
 
 ## Implemented query operators
