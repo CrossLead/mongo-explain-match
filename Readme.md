@@ -2,6 +2,7 @@
 
 WORK IN PROGRESS -- API / features still rapidly changing...
 
+[![npm version](https://badge.fury.io/js/mongo-explain-match.svg)](https://badge.fury.io/js/mongo-explain-match)
 [![Build Status](https://travis-ci.org/CrossLead/mongo-explain-match.svg?branch=master)](https://travis-ci.org/CrossLead/mongo-explain-match)
 
 Utility library for explaining why a mongodb document matches a mongodb query.
