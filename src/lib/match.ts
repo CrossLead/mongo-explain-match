@@ -257,41 +257,19 @@ function handleOperatorKey(
       };
     }
 
-    case '$in': {
-      const arr = errorIfNotArray(key, query);
-      const newState = extendPaths(state, { query: '$in' });
-      const reason = createReason(newState, MatchResultType.IN_SET);
-
-      for (const v of arr) {
-        if (!isMongoPrimative(v)) {
-          throw new Error(`Non primative in $in clause`);
-        }
-
-        const isMatch = Array.isArray(doc)
-          ? doc.some(dv => matchesPrimative(dv, v))
-          : matchesPrimative(doc, v);
-
-        if (isMatch) {
-          return {
-            match: true,
-            reasons: [reason]
-          };
-        }
-      }
-      return {
-        match: false,
-        reasons: [reason]
-      };
-    }
-
+    case '$in':
     case '$nin': {
       const arr = errorIfNotArray(key, query);
-      const newState = extendPaths(state, { query: '$nin' });
-      const reason = createReason(newState, MatchResultType.NOT_IN_SET);
+      const newState = extendPaths(state, { query: key });
+      const $in = key === '$in';
+      const reason = createReason(
+        newState,
+        $in ? MatchResultType.IN_SET : MatchResultType.NOT_IN_SET
+      );
 
       for (const v of arr) {
         if (!isMongoPrimative(v)) {
-          throw new Error(`Non primative in $in clause`);
+          throw new Error(`Non primative in ${key} clause`);
         }
 
         const isMatch = Array.isArray(doc)
@@ -300,13 +278,13 @@ function handleOperatorKey(
 
         if (isMatch) {
           return {
-            match: false,
+            match: $in,
             reasons: [reason]
           };
         }
       }
       return {
-        match: true,
+        match: !$in,
         reasons: [reason]
       };
     }
@@ -323,27 +301,17 @@ function handleOperatorKey(
       };
     }
 
-    case '$ne': {
-      const value = errorIfNotPrimative(key, query);
-      return {
-        match: !matchesPrimative(doc, value),
-        reasons: [
-          createReason(
-            extendPaths(state, { query: '$ne' }),
-            MatchResultType.NOT_EQUAL
-          )
-        ]
-      };
-    }
-
+    case '$ne':
     case '$eq': {
       const value = errorIfNotPrimative(key, query);
+      const $eq = key === '$eq';
+      const matches = matchesPrimative(doc, value);
       return {
-        match: matchesPrimative(doc, value),
+        match: $eq ? matches : !matches,
         reasons: [
           createReason(
-            extendPaths(state, { query: '$eq' }),
-            MatchResultType.EQUAL
+            extendPaths(state, { query: key }),
+            $eq ? MatchResultType.EQUAL : MatchResultType.NOT_EQUAL
           )
         ]
       };
