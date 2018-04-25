@@ -35,16 +35,7 @@ console.log(result);
  */
 const matcher = match({ id: { $in: [2, 3] } });
 const result2 = matcher(doc);
-// {
-//   "match": true,
-//   "reasons": [
-//     {
-//       "propertyPath": "id",
-//       "queryPath": "id.$in",
-//       "type": "IN_SET"
-//     }
-//   ]
-// }
+// true
 ```
 
 ## Implemented query operators
