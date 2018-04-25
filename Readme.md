@@ -1,4 +1,4 @@
-# mongo-match
+# mongo-explain-match
 
 WORK IN PROGRESS -- API / features still rapidly changing...
 
