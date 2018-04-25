@@ -31,11 +31,11 @@ test('can filter arrays with curried match()', t => {
     { id: 3, name: 'Chris' }
   ];
 
-  const queryFunction = match({
-    $or: [{ name: /A/ }, { id: 2 }]
-  });
-
-  const filtered = docs.filter(queryFunction);
+  const filtered = docs.filter(
+    match({
+      $or: [{ name: /A/ }, { id: 2 }]
+    })
+  );
 
   t.is(filtered.length, 2);
   t.deepEqual(filtered, docs.slice(0, 2));
