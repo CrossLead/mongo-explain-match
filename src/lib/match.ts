@@ -111,7 +111,7 @@ function handleDocument(
 
     if (!hasMatchFailure && resultMatches) {
       successReasons.push(...reasons);
-    } else {
+    } else if (!resultMatches) {
       hasMatchFailure = true;
       failureReasons.push(...reasons);
     }
