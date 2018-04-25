@@ -4,6 +4,7 @@ import {
   isNestedPropertyKey,
   isObjectID,
   isOperatorKey,
+  matchesPrimative,
   MongoPrimative,
   MongoQuery,
   ObjectID
@@ -24,6 +25,7 @@ export interface ExplainResultReason {
 export enum ExplainResultType {
   EQUAL = 'EQUAL',
   IN_SET = 'IN_SET',
+  NOT_IN_SET = 'NOT_IN_SET',
   HAS_NO_KEYS = 'HAS_NO_KEYS',
   HAS_NO_PATH = 'HAS_NO_PATH',
   INVALID_OPERATOR = 'INVALID_OPERATOR'
@@ -40,7 +42,7 @@ export interface TraversalState {
  * @param doc mongodb document as plain object
  * @param query mongodb query object
  */
-export function explain(doc: any, query: MongoQuery) {
+export function explain(doc: object, query: MongoQuery) {
   return handleDocument(doc, query, { propertyPath: '', queryPath: '' });
 }
 
@@ -127,9 +129,8 @@ function handlePrimative(
   value: MongoPrimative,
   state: TraversalState
 ) {
-  const match = matchesPrimative(doc, value);
   return {
-    match,
+    match: matchesPrimative(doc, value),
     reasons: [createEqualityReason(state)]
   };
 }
@@ -175,13 +176,12 @@ function handleOperatorKey(
 ): ExplainResult {
   switch (key) {
     case '$and': {
-      errorIfNotArray(key, query);
-      const arr = query[key]!;
+      const arr = errorIfNotArray(key, query);
       const newState = extendPaths(state, { query: '$and' });
       const positiveReasons: ExplainResultReason[] = [];
 
       for (const q of arr) {
-        const result = handleDocument(doc, q, newState);
+        const result = handleDocument(doc, q as MongoQuery, newState);
         if (!result.match) {
           return result;
         } else {
@@ -196,13 +196,12 @@ function handleOperatorKey(
     }
 
     case '$or': {
-      errorIfNotArray(key, query);
-      const arr = query[key]!;
+      const arr = errorIfNotArray(key, query);
       const newState = extendPaths(state, { query: '$or' });
       const negativeReasons: ExplainResultReason[] = [];
 
       for (const q of arr) {
-        const result = handleDocument(doc, q, newState);
+        const result = handleDocument(doc, q as MongoQuery, newState);
         if (result.match) {
           return result;
         } else {
@@ -217,11 +216,48 @@ function handleOperatorKey(
     }
 
     case '$in': {
-      errorIfNotArray(key, query);
+      const arr = errorIfNotArray(key, query);
+      const newState = extendPaths(state, { query: '$in' });
+      const reason = createReason(newState, ExplainResultType.IN_SET);
+
+      for (const v of arr) {
+        if (!isMongoPrimative(v)) {
+          throw new Error(`Non primative in $in clause`);
+        }
+        if (matchesPrimative(doc, v)) {
+          return {
+            match: true,
+            reasons: [reason]
+          };
+        }
+      }
+      return {
+        match: false,
+        reasons: [reason]
+      };
     }
 
     case '$nin': {
       errorIfNotArray(key, query);
+      const arr = errorIfNotArray(key, query);
+      const newState = extendPaths(state, { query: '$nin' });
+      const reason = createReason(newState, ExplainResultType.NOT_IN_SET);
+
+      for (const v of arr) {
+        if (!isMongoPrimative(v)) {
+          throw new Error(`Non primative in $in clause`);
+        }
+        if (matchesPrimative(doc, v)) {
+          return {
+            match: false,
+            reasons: [reason]
+          };
+        }
+      }
+      return {
+        match: true,
+        reasons: [reason]
+      };
     }
 
     default: {
@@ -230,22 +266,10 @@ function handleOperatorKey(
   }
 }
 
-function matchesPrimative(val: MongoPrimative, query: MongoPrimative) {
-  if (val instanceof Date) {
-    return query instanceof Date && query.getTime() === val.getTime();
-  }
-
-  if (isObjectID(val)) {
-    return isObjectID(query) && val.equals(query);
-  }
-
-  return val === query;
-}
-
 function extendPaths(
   state: TraversalState,
   paths: { query?: string; doc?: string }
-) {
+): TraversalState {
   const { query, doc } = paths;
   const { queryPath, propertyPath } = state;
 

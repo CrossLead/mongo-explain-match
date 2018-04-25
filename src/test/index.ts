@@ -18,6 +18,5 @@ cases.filter(d => !/\.d\.ts$/.test(d)).forEach(file => {
     const { doc, query, matches } = require(path.join(CASE_DIR, file));
     const result = explain(doc, query);
     t.is(result.match, matches, `${name} test should produce ${matches}`);
-    console.log(JSON.stringify(result, null, 2));
   });
 });

@@ -1,1 +1,6 @@
-export { explain } from './explain';
+export {
+  explain,
+  ExplainResult,
+  ExplainResultType,
+  ExplainResultReason
+} from './explain';

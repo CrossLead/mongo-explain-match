@@ -14,6 +14,7 @@ export type MongoPrimative =
   | null
   | Date
   | ObjectID
+  | RegExp
   | undefined;
 
 /**
@@ -59,11 +60,14 @@ export function isObjectID<T>(obj: T | ObjectID): obj is ObjectID {
 export function isMongoPrimative<T>(
   obj: T | MongoPrimative
 ): obj is MongoPrimative {
+  const type = typeof obj;
   return (
-    typeof obj === 'undefined' ||
-    typeof obj !== 'object' ||
+    type === 'undefined' ||
+    type === 'number' ||
+    type === 'string' ||
     obj === null ||
     obj instanceof Date ||
+    obj instanceof RegExp ||
     isObjectID(obj)
   );
 }
@@ -96,7 +100,29 @@ export function errorIfNotArray(
   key: keyof MongoQueryOperatorProperties,
   query: MongoQuery
 ) {
-  if (!Array.isArray(query[key])) {
+  const arr = query[key];
+  if (!Array.isArray(arr)) {
     throw new Error(`Value for mongo query operator ${key} must be an array.`);
+  } else {
+    return arr;
   }
+}
+
+export function matchesPrimative(val: MongoPrimative, query: MongoPrimative) {
+  if (val instanceof Date) {
+    return query instanceof Date && query.getTime() === val.getTime();
+  }
+
+  if (query instanceof RegExp) {
+    if (typeof val === 'string') {
+      return query.test(val);
+    }
+    return query === val;
+  }
+
+  if (isObjectID(val)) {
+    return isObjectID(query) && val.equals(query);
+  }
+
+  return val === query;
 }
