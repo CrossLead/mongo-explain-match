@@ -18,7 +18,9 @@
     "lint": "tslint --project ./ --fix './src/**/*.ts'"
   },
   "ava": {
-    "files": ["dist/test/index.js"]
+    "files": [
+      "dist/test/index.js"
+    ]
   },
   "dependencies": {},
   "devDependencies": {
