@@ -188,44 +188,49 @@ function handleOperatorKey(
   query: MongoQuery,
   state: TraversalState
 ): MatchResult {
+  const positiveReasons: MatchResultReason[] = [];
+  const negativeReasons: MatchResultReason[] = [];
+
   switch (key) {
     case '$and': {
       const arr = errorIfNotArray(key, query);
       const newState = extendPaths(state, { query: '$and' });
-      const positiveReasons: MatchResultReason[] = [];
+      let isMatch = true;
 
       for (const q of arr) {
         const result = handleDocument(doc, q as MongoQuery, newState);
         if (!result.match) {
-          return result;
+          isMatch = false;
+          negativeReasons.push(...result.reasons);
         } else {
           positiveReasons.push(...result.reasons);
         }
       }
 
       return {
-        match: true,
-        reasons: positiveReasons
+        match: isMatch,
+        reasons: isMatch ? positiveReasons : negativeReasons
       };
     }
 
     case '$or': {
       const arr = errorIfNotArray(key, query);
       const newState = extendPaths(state, { query: '$or' });
-      const negativeReasons: MatchResultReason[] = [];
+      let isMatch = false;
 
       for (const q of arr) {
         const result = handleDocument(doc, q as MongoQuery, newState);
         if (result.match) {
-          return result;
+          isMatch = true;
+          positiveReasons.push(...result.reasons);
         } else {
           negativeReasons.push(...result.reasons);
         }
       }
 
       return {
-        match: false,
-        reasons: negativeReasons
+        match: isMatch,
+        reasons: isMatch ? positiveReasons : negativeReasons
       };
     }
 
