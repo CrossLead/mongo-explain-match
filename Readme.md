@@ -53,5 +53,6 @@ const result2 = matcher(doc);
 * [ ] `$not`
 * [x] `$nin`
 * [x] `$in`
+* [x] `$ne`
 * [ ] `$elemMatch`
 * [ ] `$regex`

@@ -1,5 +1,6 @@
 import {
   errorIfNotArray,
+  errorIfNotPrimative,
   isMongoPrimative,
   isNestedPropertyKey,
   isObjectID,
@@ -24,6 +25,7 @@ export interface MatchResultReason {
 
 export enum MatchResultType {
   EQUAL = 'EQUAL',
+  NOT_EQUAL = 'NOT_EQUAL',
   IN_SET = 'IN_SET',
   NOT_IN_SET = 'NOT_IN_SET',
   HAS_NO_KEYS = 'HAS_NO_KEYS',
@@ -49,15 +51,16 @@ export function match(
   doc?: object
 ): MatchResult | ((doc: object) => MatchResult) {
   const state = { propertyPath: '', queryPath: '' };
+
   if (!doc) {
     return (d: object) => handleDocument(d, query, state);
   }
+
   return handleDocument(doc, query, state);
 }
 
 /**
  * base handler for query objects
- *
  *
  * @param doc
  * @param query
@@ -195,6 +198,7 @@ function handleOperatorKey(
     case '$and': {
       const arr = errorIfNotArray(key, query);
       const newState = extendPaths(state, { query: '$and' });
+
       let isMatch = true;
       let i = 0;
 
@@ -204,6 +208,7 @@ function handleOperatorKey(
           q as MongoQuery,
           extendPaths(newState, { query: `[${i}]` })
         );
+
         if (!result.match) {
           isMatch = false;
           negativeReasons.push(...result.reasons);
@@ -223,6 +228,7 @@ function handleOperatorKey(
     case '$or': {
       const arr = errorIfNotArray(key, query);
       const newState = extendPaths(state, { query: '$or' });
+
       let isMatch = false;
       let i = 0;
 
@@ -232,6 +238,7 @@ function handleOperatorKey(
           q as MongoQuery,
           extendPaths(newState, { query: `[${i}]` })
         );
+
         if (result.match) {
           isMatch = true;
           positiveReasons.push(...result.reasons);
@@ -271,7 +278,6 @@ function handleOperatorKey(
     }
 
     case '$nin': {
-      errorIfNotArray(key, query);
       const arr = errorIfNotArray(key, query);
       const newState = extendPaths(state, { query: '$nin' });
       const reason = createReason(newState, MatchResultType.NOT_IN_SET);
@@ -290,6 +296,19 @@ function handleOperatorKey(
       return {
         match: true,
         reasons: [reason]
+      };
+    }
+
+    case '$ne': {
+      const value = errorIfNotPrimative(key, query);
+      return {
+        match: !matchesPrimative(doc, value),
+        reasons: [
+          createReason(
+            extendPaths(state, { query: '$ne' }),
+            MatchResultType.NOT_EQUAL
+          )
+        ]
       };
     }
 
@@ -323,9 +342,6 @@ function createEqualityReason(state: TraversalState) {
 
 function createReason(state: TraversalState, type: MatchResultType) {
   const { propertyPath, queryPath } = state;
-  return {
-    propertyPath,
-    queryPath,
-    type
-  };
+
+  return { propertyPath, queryPath, type };
 }

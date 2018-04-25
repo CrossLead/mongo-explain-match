@@ -25,6 +25,7 @@ export interface MongoQueryOperatorProperties {
   $or?: MongoQuery[];
   $in?: MongoPrimative[];
   $nin?: MongoPrimative[];
+  $ne?: MongoPrimative;
 }
 
 /**
@@ -105,6 +106,18 @@ export function errorIfNotArray(
     throw new Error(`Value for mongo query operator ${key} must be an array.`);
   } else {
     return arr;
+  }
+}
+
+export function errorIfNotPrimative(
+  key: keyof MongoQueryOperatorProperties,
+  query: MongoQuery
+) {
+  const value = query[key];
+  if (!isMongoPrimative(value)) {
+    throw new Error(`Value for mongo query operator ${key} must be primative.`);
+  } else {
+    return value;
   }
 }
 
