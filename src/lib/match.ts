@@ -326,6 +326,19 @@ function handleOperatorKey(
       };
     }
 
+    case '$eq': {
+      const value = errorIfNotPrimative(key, query);
+      return {
+        match: matchesPrimative(doc, value),
+        reasons: [
+          createReason(
+            extendPaths(state, { query: '$eq' }),
+            MatchResultType.EQUAL
+          )
+        ]
+      };
+    }
+
     case '$gt':
     case '$gte':
     case '$lt':

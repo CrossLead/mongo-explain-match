@@ -50,9 +50,10 @@ const result2 = matcher(doc);
 
 * [x] `$and`
 * [x] `$or`
-* [ ] `$not`
+* [x] `$not`
 * [x] `$nin`
 * [x] `$in`
+* [x] `$eq`
 * [x] `$ne`
 * [x] `$gt`
 * [x] `$gte`

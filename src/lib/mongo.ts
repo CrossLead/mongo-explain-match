@@ -26,6 +26,7 @@ export interface MongoQueryOperatorProperties {
   $in?: MongoPrimative[];
   $nin?: MongoPrimative[];
   $ne?: MongoPrimative;
+  $eq?: MongoQuery;
   $gt?: MongoPrimative;
   $gte?: MongoPrimative;
   $lt?: MongoPrimative;
