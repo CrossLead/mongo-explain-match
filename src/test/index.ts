@@ -1,7 +1,7 @@
 import test from 'ava';
 import * as fs from 'fs';
 import * as path from 'path';
-import { explain } from '../lib';
+import { explain } from '../';
 
 /**
  *

@@ -1,1 +1,6 @@
-export { explain } from './lib';
+export {
+  explain,
+  ExplainResult,
+  ExplainResultType,
+  ExplainResultReason
+} from './lib/explain';
