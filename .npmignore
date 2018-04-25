@@ -1,5 +1,7 @@
 node_modules
 src
+dist/test
+dist-es/test
 coverage
 .vscode
 .tmp
