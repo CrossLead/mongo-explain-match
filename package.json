@@ -7,6 +7,7 @@
   "scripts": {
     "test": "npm run lint && npm run ava",
     "ava": "npm run build && ava",
+    "prepublish": "npm run test && npm run build",
     "build": "tsc",
     "build-module": "tsc -p ./ --module 'ES2015' --outDir './dist-es/'",
     "lint": "tslint --project ./ --fix './src/**/*.ts'"
