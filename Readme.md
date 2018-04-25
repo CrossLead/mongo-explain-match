@@ -32,10 +32,10 @@ console.log(result);
 
 ## Implemented query operators
 
-* [ ] `$and`
-* [ ] `$or`
+* [x] `$and`
+* [x] `$or`
 * [ ] `$not`
-* [ ] `$nin`
-* [ ] `$in`
+* [x] `$nin`
+* [x] `$in`
 * [ ] `$elemMatch`
 * [ ] `$regex`
