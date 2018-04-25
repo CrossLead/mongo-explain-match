@@ -11,10 +11,10 @@ export const query = {
 export const matches = true;
 
 export const reasons = [
-  { propertyPath: 'id', queryPath: '$or.id', type: 'EQUAL' },
+  { propertyPath: 'id', queryPath: '$or.[1].id', type: 'EQUAL' },
   {
     propertyPath: 'name',
-    queryPath: '$or.name',
+    queryPath: '$or.[0].name',
     type: 'EQUAL'
   }
 ];

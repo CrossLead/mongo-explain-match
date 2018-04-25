@@ -196,15 +196,22 @@ function handleOperatorKey(
       const arr = errorIfNotArray(key, query);
       const newState = extendPaths(state, { query: '$and' });
       let isMatch = true;
+      let i = 0;
 
       for (const q of arr) {
-        const result = handleDocument(doc, q as MongoQuery, newState);
+        const result = handleDocument(
+          doc,
+          q as MongoQuery,
+          extendPaths(newState, { query: `[${i}]` })
+        );
         if (!result.match) {
           isMatch = false;
           negativeReasons.push(...result.reasons);
         } else {
           positiveReasons.push(...result.reasons);
         }
+
+        i++;
       }
 
       return {
@@ -217,15 +224,22 @@ function handleOperatorKey(
       const arr = errorIfNotArray(key, query);
       const newState = extendPaths(state, { query: '$or' });
       let isMatch = false;
+      let i = 0;
 
       for (const q of arr) {
-        const result = handleDocument(doc, q as MongoQuery, newState);
+        const result = handleDocument(
+          doc,
+          q as MongoQuery,
+          extendPaths(newState, { query: `[${i}]` })
+        );
         if (result.match) {
           isMatch = true;
           positiveReasons.push(...result.reasons);
         } else {
           negativeReasons.push(...result.reasons);
         }
+
+        i++;
       }
 
       return {
