@@ -24,8 +24,6 @@ export interface ExplainResultReason {
 export enum ExplainResultType {
   EQUAL = 'EQUAL',
   IN_SET = 'IN_SET',
-  AND_CLAUSE = 'AND_CLAUSE',
-  OR_CLAUSE = 'OR_CLAUSE',
   HAS_NO_KEYS = 'HAS_NO_KEYS',
   HAS_NO_PATH = 'HAS_NO_PATH',
   INVALID_OPERATOR = 'INVALID_OPERATOR'
@@ -98,16 +96,11 @@ function handleDocumentProperty(
   state: TraversalState
 ): ExplainResult {
   if (isOperatorKey(key)) {
-    return handleOperatorKey(
-      key,
-      doc,
-      query,
-      extendPaths(state, { query: key })
-    );
+    return handleOperatorKey(key, doc, query, state);
   }
 
   if (isNestedPropertyKey(key)) {
-    return handleNestedKey(key, doc, query, extendPaths(state, { query: key }));
+    return handleNestedKey(key, doc, query, state);
   }
 
   const newState = extendPaths(state, { doc: key, query: key });
@@ -155,17 +148,14 @@ function handleNestedKey(
   query: MongoQuery,
   state: TraversalState
 ): ExplainResult {
+  const newState = extendPaths(state, { doc: key, query: `"${key}"` });
   const nestedDoc = get(doc, key);
   const nestedQuery = query[key];
 
   if (isMongoPrimative(nestedQuery)) {
-    return handlePrimative(nestedDoc, nestedQuery, state);
+    return handlePrimative(nestedDoc, nestedQuery, newState);
   } else {
-    return handleDocument(
-      nestedDoc,
-      nestedQuery,
-      extendPaths(state, { doc: key, query: `"${key}"` })
-    );
+    return handleDocument(nestedDoc, nestedQuery, newState);
   }
 }
 
@@ -188,20 +178,20 @@ function handleOperatorKey(
       errorIfNotArray(key, query);
       const arr = query[key]!;
       const newState = extendPaths(state, { query: '$and' });
+      const positiveReasons: ExplainResultReason[] = [];
 
       for (const q of arr) {
         const result = handleDocument(doc, q, newState);
         if (!result.match) {
-          return {
-            match: false,
-            reasons: [createReason(newState, ExplainResultType.AND_CLAUSE)]
-          };
+          return result;
+        } else {
+          positiveReasons.push(...result.reasons);
         }
       }
 
       return {
         match: true,
-        reasons: [createReason(newState, ExplainResultType.AND_CLAUSE)]
+        reasons: positiveReasons
       };
     }
 
@@ -209,20 +199,20 @@ function handleOperatorKey(
       errorIfNotArray(key, query);
       const arr = query[key]!;
       const newState = extendPaths(state, { query: '$or' });
+      const negativeReasons: ExplainResultReason[] = [];
 
       for (const q of arr) {
         const result = handleDocument(doc, q, newState);
         if (result.match) {
-          return {
-            match: true,
-            reasons: [createReason(newState, ExplainResultType.OR_CLAUSE)]
-          };
+          return result;
+        } else {
+          negativeReasons.push(...result.reasons);
         }
       }
 
       return {
         match: false,
-        reasons: [createReason(newState, ExplainResultType.OR_CLAUSE)]
+        reasons: negativeReasons
       };
     }
 
