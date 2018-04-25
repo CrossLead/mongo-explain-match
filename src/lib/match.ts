@@ -266,7 +266,12 @@ function handleOperatorKey(
         if (!isMongoPrimative(v)) {
           throw new Error(`Non primative in $in clause`);
         }
-        if (matchesPrimative(doc, v)) {
+
+        const isMatch = Array.isArray(doc)
+          ? doc.some(dv => matchesPrimative(dv, v))
+          : matchesPrimative(doc, v);
+
+        if (isMatch) {
           return {
             match: true,
             reasons: [reason]
@@ -288,7 +293,12 @@ function handleOperatorKey(
         if (!isMongoPrimative(v)) {
           throw new Error(`Non primative in $in clause`);
         }
-        if (matchesPrimative(doc, v)) {
+
+        const isMatch = Array.isArray(doc)
+          ? doc.some(dv => matchesPrimative(dv, v))
+          : matchesPrimative(doc, v);
+
+        if (isMatch) {
           return {
             match: false,
             reasons: [reason]
