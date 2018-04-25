@@ -5,17 +5,20 @@
   "module": "./dist-es/index.js",
   "jsnext:main": "./dist-es/index.js",
   "scripts": {
-    "test": "npm run build && npm run lint && npm run ava",
-    "ava": "ava",
+    "test": "npm run lint && npm run ava",
+    "ava": "npm run build && ava",
     "build": "tsc",
     "build-module": "tsc -p ./ --module 'ES2015' --outDir './dist-es/'",
     "lint": "tslint --project ./ --fix './src/**/*.ts'"
   },
   "ava": {
-    "files": ["dist/test/index.js"]
+    "files": [
+      "dist/test/index.js"
+    ]
   },
   "dependencies": {},
   "devDependencies": {
+    "@types/node": "9.6.6",
     "ava": "0.25.0",
     "prettier": "1.12.1",
     "tslint": "5.9.1",

@@ -13,12 +13,19 @@ const doc = {
   id: 1
 };
 
-const result = explain(doc, { id: { $in: [1, 2, 3] } });
+const result = explain(doc, { id: { $in: [2, 3] } });
 
-console.log(result.matches);
-// -> true
-console.log(result.reason);
-// -> "document.id property matches 'id.$in' clause on query"
+console.log(result);
+// {
+//   "match": true,
+//   "reasons": [
+//     {
+//       "propertyPath": "id",
+//       "queryPath": "id.$in",
+//       "type": "IN_SET"
+//     }
+//   ]
+// }
 ```
 
 ## Implemented query operators
