@@ -2,14 +2,14 @@
 
 WORK IN PROGRESS -- API / features still rapidly changing...
 
-[![Build Status](https://travis-ci.org/CrossLead/mongo-match.svg?branch=master)](https://travis-ci.org/CrossLead/mongo-match)
+[![Build Status](https://travis-ci.org/CrossLead/mongo-explain-match.svg?branch=master)](https://travis-ci.org/CrossLead/mongo-explain-match)
 
 Utility library for explaining why a mongodb document matches a mongodb query.
 
 ## Example
 
 ```typescript
-import { match } from 'mongo-match';
+import { match } from 'mongo-explain-match';
 
 const doc = {
   id: 1
