@@ -1,6 +1,7 @@
 import {
   errorIfNotArray,
   errorIfNotPrimative,
+  inequalityCompare,
   isMongoPrimative,
   isNestedPropertyKey,
   isObjectID,
@@ -30,6 +31,7 @@ export enum MatchResultType {
   NOT_IN_SET = 'NOT_IN_SET',
   HAS_NO_KEYS = 'HAS_NO_KEYS',
   HAS_NO_PATH = 'HAS_NO_PATH',
+  INEQUALITY = 'INEQUALITY',
   INVALID_OPERATOR = 'INVALID_OPERATOR'
 }
 
@@ -299,6 +301,18 @@ function handleOperatorKey(
       };
     }
 
+    case '$not': {
+      const invertResult = handleDocument(
+        doc,
+        query[key] as MongoQuery,
+        extendPaths(state, { query: '$not' })
+      );
+      return {
+        match: !invertResult.match,
+        reasons: invertResult.reasons
+      };
+    }
+
     case '$ne': {
       const value = errorIfNotPrimative(key, query);
       return {
@@ -309,6 +323,17 @@ function handleOperatorKey(
             MatchResultType.NOT_EQUAL
           )
         ]
+      };
+    }
+
+    case '$gt':
+    case '$gte':
+    case '$lt':
+    case '$lte': {
+      const value = errorIfNotPrimative(key, query);
+      return {
+        match: inequalityCompare(key, doc, value),
+        reasons: [createReason(state, MatchResultType.INEQUALITY)]
       };
     }
 

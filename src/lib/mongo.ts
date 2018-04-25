@@ -26,6 +26,10 @@ export interface MongoQueryOperatorProperties {
   $in?: MongoPrimative[];
   $nin?: MongoPrimative[];
   $ne?: MongoPrimative;
+  $gt?: MongoPrimative;
+  $gte?: MongoPrimative;
+  $lt?: MongoPrimative;
+  $lte?: MongoPrimative;
 }
 
 /**
@@ -138,4 +142,25 @@ export function matchesPrimative(val: MongoPrimative, query: MongoPrimative) {
   }
 
   return val === query;
+}
+
+export function inequalityCompare(
+  key: '$gt' | '$gte' | '$lt' | '$lte',
+  doc: MongoPrimative,
+  query: MongoPrimative
+) {
+  switch (key) {
+    case '$gt':
+      return query! < doc!;
+    case '$gte':
+      return query! <= doc!;
+    case '$lt':
+      return query! > doc!;
+    case '$lte':
+      return query! >= doc!;
+
+    default: {
+      throw new Error(`Invalid inequality operator: ${key}`);
+    }
+  }
 }

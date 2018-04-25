@@ -54,5 +54,9 @@ const result2 = matcher(doc);
 * [x] `$nin`
 * [x] `$in`
 * [x] `$ne`
+* [x] `$gt`
+* [x] `$gte`
+* [x] `$lt`
+* [x] `$lte`
 * [ ] `$elemMatch`
 * [ ] `$regex`
