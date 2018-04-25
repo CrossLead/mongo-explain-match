@@ -56,24 +56,25 @@ export interface TraversalState {
 }
 
 /**
- * explain why a query matches a doc
+ * explain why a query matches a doc or return a curried function
+ * for filtering an array of mongodb objects
  *
  * @param query mongodb query object
  * @param doc mongodb document as plain object
  */
-export function match(query: MongoQuery): ((doc: object) => MatchResult);
-export function match(query: MongoQuery, doc: object): MatchResult;
+export function match(query: object): ((doc: object) => boolean);
+export function match(query: object, doc: object): MatchResult;
 export function match(
-  query: MongoQuery,
+  query: object,
   doc?: object
-): MatchResult | ((doc: object) => MatchResult) {
+): MatchResult | ((doc: object) => boolean) {
   const state = { propertyPath: '', queryPath: '' };
 
   if (!doc) {
-    return (d: object) => handleDocument(d, query, state);
+    return (d: object) => handleDocument(d, query as MongoQuery, state).match;
   }
 
-  return handleDocument(doc, query, state);
+  return handleDocument(doc, query as MongoQuery, state);
 }
 
 /**

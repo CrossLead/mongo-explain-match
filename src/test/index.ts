@@ -24,6 +24,23 @@ cases.filter(d => !/\.d\.ts$/.test(d)).forEach(file => {
   });
 });
 
+test('can filter arrays with curried match()', t => {
+  const docs = [
+    { id: 1, name: 'Amanda' },
+    { id: 2, name: 'Ben' },
+    { id: 3, name: 'Chris' }
+  ];
+
+  const queryFunction = match({
+    $or: [{ name: /A/ }, { id: 2 }]
+  });
+
+  const filtered = docs.filter(queryFunction);
+
+  t.is(filtered.length, 2);
+  t.deepEqual(filtered, docs.slice(0, 2));
+});
+
 function sortById(a: MatchResultReason, b: MatchResultReason) {
   return (
     Number(a.propertyPath > b.propertyPath) -
