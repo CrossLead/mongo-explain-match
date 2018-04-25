@@ -33,9 +33,21 @@ console.log(result);
 /**
  * can also only provide query to get curried matching function
  */
-const matcher = match({ id: { $in: [2, 3] } });
-const result2 = matcher(doc);
-// true
+const docs = [
+  { id: 1, name: 'Amanda' },
+  { id: 2, name: 'Ben' },
+  { id: 3, name: 'Chris' }
+];
+
+const filtered = docs.filter(
+  match({
+    $or: [{ name: /A/ }, { id: 2 }]
+  })
+);
+// filtered === [
+//   { id: 1, name: 'Amanda' },
+//   { id: 2, name: 'Ben' },
+// ];
 ```
 
 ## Implemented query operators
