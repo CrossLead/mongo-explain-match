@@ -1,21 +1,21 @@
-# mongo-query-explain
+# mongo-match
 
 WORK IN PROGRESS -- API / features still rapidly changing...
 
-[![Build Status](https://travis-ci.org/CrossLead/mongo-query-explain.svg?branch=master)](https://travis-ci.org/CrossLead/mongo-query-explain)
+[![Build Status](https://travis-ci.org/CrossLead/mongo-match.svg?branch=master)](https://travis-ci.org/CrossLead/mongo-match)
 
 Utility library for explaining why a document matches a query.
 
 ## Example
 
 ```typescript
-import { explain } from 'mongo-query-explain';
+import { match } from 'mongo-match';
 
 const doc = {
   id: 1
 };
 
-const result = explain(doc, { id: { $in: [2, 3] } });
+const result = match({ id: { $in: [2, 3] } }, doc);
 
 console.log(result);
 // {

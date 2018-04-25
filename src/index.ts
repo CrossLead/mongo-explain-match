@@ -1,6 +1,6 @@
 export {
-  explain,
-  ExplainResult,
-  ExplainResultType,
-  ExplainResultReason
-} from './lib/explain';
+  match,
+  MatchResult,
+  MatchResultType,
+  MatchResultReason
+} from './lib/match';

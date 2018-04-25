@@ -11,18 +11,18 @@ import {
 } from './mongo';
 import { get } from './util';
 
-export interface ExplainResult {
+export interface MatchResult {
   match: boolean;
-  reasons: ExplainResultReason[];
+  reasons: MatchResultReason[];
 }
 
-export interface ExplainResultReason {
+export interface MatchResultReason {
   propertyPath: string;
   queryPath: string;
-  type: ExplainResultType;
+  type: MatchResultType;
 }
 
-export enum ExplainResultType {
+export enum MatchResultType {
   EQUAL = 'EQUAL',
   IN_SET = 'IN_SET',
   NOT_IN_SET = 'NOT_IN_SET',
@@ -39,11 +39,20 @@ export interface TraversalState {
 /**
  * explain why a query matches a doc
  *
- * @param doc mongodb document as plain object
  * @param query mongodb query object
+ * @param doc mongodb document as plain object
  */
-export function explain(doc: object, query: MongoQuery) {
-  return handleDocument(doc, query, { propertyPath: '', queryPath: '' });
+export function match(query: MongoQuery): ((doc: object) => MatchResult);
+export function match(query: MongoQuery, doc: object): MatchResult;
+export function match(
+  query: MongoQuery,
+  doc?: object
+): MatchResult | ((doc: object) => MatchResult) {
+  const state = { propertyPath: '', queryPath: '' };
+  if (!doc) {
+    return (d: object) => handleDocument(d, query, state);
+  }
+  return handleDocument(doc, query, state);
 }
 
 /**
@@ -58,26 +67,31 @@ function handleDocument(
   doc: any,
   query: MongoQuery,
   state: TraversalState
-): ExplainResult {
+): MatchResult {
   const keys = Object.keys(query);
 
   let hasMatchFailure = false;
 
-  const failureReasons: ExplainResultReason[] = [];
-  const successReasons: ExplainResultReason[] = [];
+  const failureReasons: MatchResultReason[] = [];
+  const successReasons: MatchResultReason[] = [];
 
   // short circuit on no keys -- universal positive match
   if (!keys.length) {
     return {
       match: true,
-      reasons: [createReason(state, ExplainResultType.HAS_NO_KEYS)]
+      reasons: [createReason(state, MatchResultType.HAS_NO_KEYS)]
     };
   }
 
   for (const key of keys) {
-    const { match, reasons } = handleDocumentProperty(key, doc, query, state);
+    const { match: resultMatches, reasons } = handleDocumentProperty(
+      key,
+      doc,
+      query,
+      state
+    );
 
-    if (!hasMatchFailure && match) {
+    if (!hasMatchFailure && resultMatches) {
       successReasons.push(...reasons);
     } else {
       hasMatchFailure = true;
@@ -96,7 +110,7 @@ function handleDocumentProperty(
   doc: any,
   query: MongoQuery,
   state: TraversalState
-): ExplainResult {
+): MatchResult {
   if (isOperatorKey(key)) {
     return handleOperatorKey(key, doc, query, state);
   }
@@ -119,7 +133,7 @@ function handleDocumentProperty(
   } else {
     return {
       match: false,
-      reasons: [createReason(state, ExplainResultType.HAS_NO_PATH)]
+      reasons: [createReason(state, MatchResultType.HAS_NO_PATH)]
     };
   }
 }
@@ -148,7 +162,7 @@ function handleNestedKey(
   doc: any,
   query: MongoQuery,
   state: TraversalState
-): ExplainResult {
+): MatchResult {
   const newState = extendPaths(state, { doc: key, query: `"${key}"` });
   const nestedDoc = get(doc, key);
   const nestedQuery = query[key];
@@ -173,12 +187,12 @@ function handleOperatorKey(
   doc: any,
   query: MongoQuery,
   state: TraversalState
-): ExplainResult {
+): MatchResult {
   switch (key) {
     case '$and': {
       const arr = errorIfNotArray(key, query);
       const newState = extendPaths(state, { query: '$and' });
-      const positiveReasons: ExplainResultReason[] = [];
+      const positiveReasons: MatchResultReason[] = [];
 
       for (const q of arr) {
         const result = handleDocument(doc, q as MongoQuery, newState);
@@ -198,7 +212,7 @@ function handleOperatorKey(
     case '$or': {
       const arr = errorIfNotArray(key, query);
       const newState = extendPaths(state, { query: '$or' });
-      const negativeReasons: ExplainResultReason[] = [];
+      const negativeReasons: MatchResultReason[] = [];
 
       for (const q of arr) {
         const result = handleDocument(doc, q as MongoQuery, newState);
@@ -218,7 +232,7 @@ function handleOperatorKey(
     case '$in': {
       const arr = errorIfNotArray(key, query);
       const newState = extendPaths(state, { query: '$in' });
-      const reason = createReason(newState, ExplainResultType.IN_SET);
+      const reason = createReason(newState, MatchResultType.IN_SET);
 
       for (const v of arr) {
         if (!isMongoPrimative(v)) {
@@ -241,7 +255,7 @@ function handleOperatorKey(
       errorIfNotArray(key, query);
       const arr = errorIfNotArray(key, query);
       const newState = extendPaths(state, { query: '$nin' });
-      const reason = createReason(newState, ExplainResultType.NOT_IN_SET);
+      const reason = createReason(newState, MatchResultType.NOT_IN_SET);
 
       for (const v of arr) {
         if (!isMongoPrimative(v)) {
@@ -285,10 +299,10 @@ function joinPaths(a: string, b: string) {
 }
 
 function createEqualityReason(state: TraversalState) {
-  return createReason(state, ExplainResultType.EQUAL);
+  return createReason(state, MatchResultType.EQUAL);
 }
 
-function createReason(state: TraversalState, type: ExplainResultType) {
+function createReason(state: TraversalState, type: MatchResultType) {
   const { propertyPath, queryPath } = state;
   return {
     propertyPath,
