@@ -4,7 +4,7 @@ WORK IN PROGRESS -- API / features still rapidly changing...
 
 [![Build Status](https://travis-ci.org/CrossLead/mongo-match.svg?branch=master)](https://travis-ci.org/CrossLead/mongo-match)
 
-Utility library for explaining why a document matches a query.
+Utility library for explaining why a mongodb document matches a mongodb query.
 
 ## Example
 
