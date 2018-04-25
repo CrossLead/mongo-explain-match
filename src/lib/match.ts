@@ -13,17 +13,29 @@ import {
 } from './mongo';
 import { get } from './util';
 
+/**
+ * return value of calling `match(query, doc)`
+ */
 export interface MatchResult {
   match: boolean;
   reasons: MatchResultReason[];
 }
 
+/**
+ * metadata describing the reason for the match (or failure to match)
+ *  - `propertyPath`: location in the document of the relevant value
+ *  - `queryPath`: location in the query relevant to the above value
+ *  - `type`: the type of interaction between query and document
+ */
 export interface MatchResultReason {
   propertyPath: string;
   queryPath: string;
   type: MatchResultType;
 }
 
+/**
+ * types of interactions between documents and queries
+ */
 export enum MatchResultType {
   EQUAL = 'EQUAL',
   NOT_EQUAL = 'NOT_EQUAL',
@@ -35,6 +47,9 @@ export enum MatchResultType {
   INVALID_OPERATOR = 'INVALID_OPERATOR'
 }
 
+/**
+ * current paths as we recurse through a mongo query and document pair.
+ */
 export interface TraversalState {
   propertyPath: string;
   queryPath: string;
@@ -62,11 +77,8 @@ export function match(
 }
 
 /**
- * base handler for query objects
- *
- * @param doc
- * @param query
- * @param state
+ * determine if a query matches a document,
+ * and find all reasons why (or why not)
  */
 function handleDocument(
   doc: any,
@@ -110,6 +122,10 @@ function handleDocument(
   };
 }
 
+/**
+ * determine if a query matches a specific document property,
+ * and find all reasons why (or why not)
+ */
 function handleDocumentProperty(
   key: string,
   doc: any,
@@ -143,6 +159,9 @@ function handleDocumentProperty(
   }
 }
 
+/**
+ * determine if a primative value matches another primative value
+ */
 function handlePrimative(
   doc: any,
   value: MongoPrimative,
@@ -150,17 +169,13 @@ function handlePrimative(
 ) {
   return {
     match: matchesPrimative(doc, value),
-    reasons: [createEqualityReason(state)]
+    reasons: [createReason(state, MatchResultType.EQUAL)]
   };
 }
 
 /**
- * check if a nested property query field matches the document
- *
- * @param key
- * @param doc
- * @param query
- * @param path
+ * check if a nested property query field matches the document,
+ * and find all reasons why or why not.
  */
 function handleNestedKey(
   key: string,
@@ -180,12 +195,8 @@ function handleNestedKey(
 }
 
 /**
- * check if an operator field matches the document
- *
- * @param key
- * @param doc
- * @param query
- * @param path
+ * check if a property inside of an operator key on a query matches the document,
+ * and find all reasons why or why not.
  */
 function handleOperatorKey(
   key: string,
@@ -334,6 +345,9 @@ function handleOperatorKey(
   }
 }
 
+/**
+ * increment query or document paths as we recurse deeper
+ */
 function extendPaths(
   state: TraversalState,
   paths: { query?: string; doc?: string }
@@ -348,15 +362,20 @@ function extendPaths(
   };
 }
 
+/**
+ * extend a path by one property access level if needed
+ */
 function joinPaths(a: string, b: string) {
   return a && b ? `${a}.${b}` : b || a;
 }
 
-function createEqualityReason(state: TraversalState) {
-  return createReason(state, MatchResultType.EQUAL);
-}
-
-function createReason(state: TraversalState, type: MatchResultType) {
+/**
+ * MatchResultReason factory function
+ */
+function createReason(
+  state: TraversalState,
+  type: MatchResultType
+): MatchResultReason {
   const { propertyPath, queryPath } = state;
 
   return { propertyPath, queryPath, type };
