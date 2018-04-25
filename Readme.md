@@ -28,6 +28,22 @@ console.log(result);
 //     }
 //   ]
 // }
+
+/**
+ * can also only provide query to get curried matching function
+ */
+const matcher = match({ id: { $in: [2, 3] } });
+const result2 = matcher(doc);
+// {
+//   "match": true,
+//   "reasons": [
+//     {
+//       "propertyPath": "id",
+//       "queryPath": "id.$in",
+//       "type": "IN_SET"
+//     }
+//   ]
+// }
 ```
 
 ## Implemented query operators
