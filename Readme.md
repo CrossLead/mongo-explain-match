@@ -64,4 +64,4 @@ const filtered = docs.filter(
 * [x] `$lt`
 * [x] `$lte`
 * [x] `$elemMatch`
-* [ ] `$regex`
+* [ ] `$regex` (No support -- would require Perl compatible regular expressions, [can use `{ field: /pattern/}` syntax instead](https://docs.mongodb.com/manual/reference/operator/query/regex/#syntax-restrictions))
