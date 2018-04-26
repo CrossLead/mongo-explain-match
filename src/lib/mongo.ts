@@ -31,6 +31,7 @@ export interface MongoQueryOperatorProperties {
   $gte?: MongoPrimative;
   $lt?: MongoPrimative;
   $lte?: MongoPrimative;
+  $elemMatch?: MongoQuery;
 }
 
 /**

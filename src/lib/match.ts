@@ -41,6 +41,7 @@ export enum MatchResultType {
   NOT_EQUAL = 'NOT_EQUAL',
   IN_SET = 'IN_SET',
   NOT_IN_SET = 'NOT_IN_SET',
+  ELEMENT_MATCH = 'ELEMENT_MATCH',
   HAS_NO_KEYS = 'HAS_NO_KEYS',
   HAS_NO_PATH = 'HAS_NO_PATH',
   INEQUALITY = 'INEQUALITY',
@@ -336,7 +337,36 @@ function handleOperatorKey(
       const value = errorIfNotPrimative(key, query);
       return {
         match: inequalityCompare(key, doc, value),
-        reasons: [createReason(state, MatchResultType.INEQUALITY)]
+        reasons: [
+          createReason(
+            extendPaths(state, { query: key }),
+            MatchResultType.INEQUALITY
+          )
+        ]
+      };
+    }
+
+    case '$elemMatch': {
+      if (!Array.isArray(doc)) {
+        throw new Error(`Cannot use $elemMatch for non-array property.`);
+      }
+      const value = query[key];
+      const newState = extendPaths(state, { query: key });
+
+      for (const docVal of doc) {
+        const result = handleDocument(docVal, value!, newState);
+        if (result.match) {
+          positiveReasons.push(...result.reasons);
+        } else {
+          negativeReasons.push(...result.reasons);
+        }
+      }
+
+      const isMatch = !!positiveReasons.length;
+
+      return {
+        match: isMatch,
+        reasons: isMatch ? positiveReasons : negativeReasons
       };
     }
 

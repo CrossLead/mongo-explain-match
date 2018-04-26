@@ -63,5 +63,5 @@ const filtered = docs.filter(
 * [x] `$gte`
 * [x] `$lt`
 * [x] `$lte`
-* [ ] `$elemMatch`
+* [x] `$elemMatch`
 * [ ] `$regex`
