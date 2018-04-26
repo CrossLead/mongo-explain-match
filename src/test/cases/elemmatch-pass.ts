@@ -3,12 +3,12 @@ export const query = { results: { $elemMatch: { $gte: 80, $lt: 85 } } };
 export const matches = true;
 export const reasons = [
   {
-    propertyPath: 'results',
+    propertyPath: 'results.[0]',
     queryPath: 'results.$elemMatch.$gte',
     type: 'INEQUALITY'
   },
   {
-    propertyPath: 'results',
+    propertyPath: 'results.[0]',
     queryPath: 'results.$elemMatch.$lt',
     type: 'INEQUALITY'
   }

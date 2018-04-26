@@ -353,13 +353,19 @@ function handleOperatorKey(
       const value = query[key];
       const newState = extendPaths(state, { query: key });
 
+      let i = 0;
       for (const docVal of doc) {
-        const result = handleDocument(docVal, value!, newState);
+        const result = handleDocument(
+          docVal,
+          value!,
+          extendPaths(newState, { doc: `[${i}]` })
+        );
         if (result.match) {
           positiveReasons.push(...result.reasons);
         } else {
           negativeReasons.push(...result.reasons);
         }
+        i++;
       }
 
       const isMatch = !!positiveReasons.length;
