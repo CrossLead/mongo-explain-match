@@ -53,6 +53,7 @@ const filtered = docs.filter(
 ## Implemented query operators
 
 * [x] `$and`
+* [ ] `$nor`
 * [x] `$or`
 * [x] `$not`
 * [x] `$nin`
@@ -64,4 +65,8 @@ const filtered = docs.filter(
 * [x] `$lt`
 * [x] `$lte`
 * [x] `$elemMatch`
+* [ ] `$size`
+* [ ] `$all`
+* [ ] `$exists`
+* [ ] `$type`
 * [ ] `$regex` (No support -- would require Perl compatible regular expressions, [can use `{ field: /pattern/}` syntax instead](https://docs.mongodb.com/manual/reference/operator/query/regex/#syntax-restrictions))
