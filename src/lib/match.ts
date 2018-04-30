@@ -273,32 +273,57 @@ function handleOperatorKey(
     case '$in':
     case '$nin': {
       const arr = errorIfNotArray(key, query);
-      const newState = extendPaths(state, { query: key });
       const $in = key === '$in';
-      const reason = createReason(
-        newState,
-        $in ? MatchResultType.IN_SET : MatchResultType.NOT_IN_SET
-      );
+      const reasonType = $in
+        ? MatchResultType.IN_SET
+        : MatchResultType.NOT_IN_SET;
+      const newState = extendPaths(state, { query: key });
 
+      let queryIndex = 0;
       for (const v of arr) {
+        const subQueryPath = joinPaths(key, `[${queryIndex}]`);
+        const reason = createReason(
+          extendPaths(state, { query: subQueryPath }),
+          reasonType
+        );
+
         if (!isMongoPrimative(v)) {
           throw new Error(`Non primative in ${key} clause`);
         }
 
+        let matchIndex = -1;
         const isMatch = Array.isArray(doc)
-          ? doc.some(dv => matchesPrimative(dv, v))
+          ? doc.some((dv, index) => {
+              const matches = matchesPrimative(dv, v);
+              if (matches) {
+                matchIndex = index;
+              }
+              return matches;
+            })
           : matchesPrimative(doc, v);
 
         if (isMatch) {
           return {
             match: $in,
-            reasons: [reason]
+            reasons: [
+              matchIndex === -1
+                ? reason
+                : createReason(
+                    extendPaths(state, {
+                      doc: `[${matchIndex}]`,
+                      query: subQueryPath
+                    }),
+                    reasonType
+                  )
+            ]
           };
         }
+
+        queryIndex++;
       }
       return {
         match: !$in,
-        reasons: [reason]
+        reasons: [createReason(extendPaths(state, { query: key }), reasonType)]
       };
     }
 
@@ -403,7 +428,12 @@ function extendPaths(
  * extend a path by one property access level if needed
  */
 function joinPaths(a: string, b: string) {
-  return a && b ? `${a}.${b}` : b || a;
+  if (a && b) {
+    // don't add object access for array index
+    return b.charAt(0) === '[' ? `${a}${b}` : `${a}.${b}`;
+  } else {
+    return b || a;
+  }
 }
 
 /**
