@@ -1,6 +1,7 @@
 import {
   errorIfNotArray,
   errorIfNotPrimative,
+  errorIfNotQuery,
   inequalityCompare,
   isMongoPrimative,
   isNestedPropertyKey,
@@ -330,7 +331,7 @@ function handleOperatorKey(
     case '$not': {
       const invertResult = handleDocument(
         doc,
-        query[key] as MongoQuery,
+        errorIfNotQuery(key, query),
         extendPaths(state, { query: '$not' })
       );
       return {
@@ -342,8 +343,9 @@ function handleOperatorKey(
     case '$ne':
     case '$eq': {
       const value = errorIfNotPrimative(key, query);
-      const $eq = key === '$eq';
       const matches = matchesPrimative(doc, value);
+      const $eq = key === '$eq';
+
       return {
         match: $eq ? matches : !matches,
         reasons: [

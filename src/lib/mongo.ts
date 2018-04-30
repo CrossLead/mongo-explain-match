@@ -25,6 +25,7 @@ export interface MongoQueryOperatorProperties {
   $or?: MongoQuery[];
   $in?: MongoPrimative[];
   $nin?: MongoPrimative[];
+  $not?: MongoQuery;
   $ne?: MongoPrimative;
   $eq?: MongoQuery;
   $gt?: MongoPrimative;
@@ -115,6 +116,12 @@ export function errorIfNotArray(
   }
 }
 
+/**
+ * assert that `key` property in query is a primative
+ *
+ * @param key
+ * @param query
+ */
 export function errorIfNotPrimative(
   key: keyof MongoQueryOperatorProperties,
   query: MongoQuery
@@ -127,6 +134,30 @@ export function errorIfNotPrimative(
   }
 }
 
+/**
+ * assert that `key` property in query is itself a subquery
+ *
+ * @param key
+ * @param query
+ */
+export function errorIfNotQuery(
+  key: keyof MongoQueryOperatorProperties,
+  query: MongoQuery
+) {
+  const value = query[key];
+  if (isMongoPrimative(value) || Array.isArray(value)) {
+    throw new Error(`Value for mongo query operator ${key} must be primative.`);
+  } else {
+    return value;
+  }
+}
+
+/**
+ * test equality for two primatives
+ *
+ * @param val
+ * @param query
+ */
 export function matchesPrimative(val: MongoPrimative, query: MongoPrimative) {
   if (val instanceof Date) {
     return query instanceof Date && query.getTime() === val.getTime();
@@ -146,6 +177,13 @@ export function matchesPrimative(val: MongoPrimative, query: MongoPrimative) {
   return val === query;
 }
 
+/**
+ * handle a mongodb inequality operator
+ *
+ * @param key
+ * @param doc
+ * @param query
+ */
 export function inequalityCompare(
   key: '$gt' | '$gte' | '$lt' | '$lte',
   doc: MongoPrimative,
